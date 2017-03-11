@@ -16,6 +16,7 @@
     "fussball-de-matchplan-grabber": "./index.js"
   },
   "dependencies": {
+    "commander": "^2.9.0",
     "jsdom": "^9.11.0"
   }
 }

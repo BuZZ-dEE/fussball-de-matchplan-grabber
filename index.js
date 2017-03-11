@@ -1,13 +1,22 @@
 #!/usr/bin/env node
 
+var commander = require('commander');
 var jsdom = require('jsdom');
+var path = require('path');
+var pkg = require( path.join(__dirname, 'package.json') );
 
 
 var matchPlan = [];
 var teamVsTeam = [];
 
+commander.version(pkg.version)
+	.option('-t, --team <team>', 'The team url.')
+	.parse(process.argv);
+
+var team = commander.team || 'http://www.fussball.de/ajax.team.next.games/-/team-id/01S7GV1URS000000VS548985VUL18RL3';
+
 jsdom.env({
-  url: "http://www.fussball.de/ajax.team.next.games/-/team-id/01S7GV1URS000000VS548985VUL18RL3",
+  url: team,
   scripts: ["http://code.jquery.com/jquery.js"],
   done: function (err, window) {
     var $ = window.$;
@@ -17,7 +26,7 @@ jsdom.env({
     // $("#team-matchplan-table").each(function() {
     //     console.log($(this).text());
     // });
-    
+
     $("tr.row-headline").each(function() {
         // console.log($(this).text());
         matchPlan.push(parseMatchTime($(this).text()))
@@ -40,8 +49,8 @@ jsdom.env({
 
 /**
  * Parse the match time.
- * 
- * @param {String} matchTime 
+ *
+ * @param {String} matchTime
  * @returns {Date} The match date time.
  */
 function parseMatchTime(matchTime) {
