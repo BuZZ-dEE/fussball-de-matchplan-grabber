@@ -4,6 +4,7 @@ var commander = require('commander');
 var jsdom = require('jsdom');
 var path = require('path');
 var pkg = require( path.join(__dirname, 'package.json') );
+var yamlConfig = require('node-yaml-config');
 
 
 /** @type String[] */
@@ -17,7 +18,8 @@ commander.version(pkg.version)
 	.option('-t, --team <team>', 'The team url.')
 	.parse(process.argv);
 
-var team = commander.team || 'http://www.fussball.de/ajax.team.next.games/-/team-id/01S7GV1URS000000VS548985VUL18RL3';
+var config = yamlConfig.load(__dirname + '/config.yml');
+var team = commander.team || config.team;
 
 jsdom.env({
   url: team,
@@ -162,7 +164,7 @@ var MatchplanEntry = (function() {
 
     /**
      * Get the match plan entry in string respresentation.
-     * 
+     *
      * e.g. "19.3.2017, 11:00:00: Victoria Osternburg vs GVO Oldenburg IV"
      */
     MatchplanEntry.prototype.toString = function() {

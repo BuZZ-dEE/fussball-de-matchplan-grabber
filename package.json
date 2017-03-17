@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "commander": "^2.9.0",
-    "jsdom": "^9.11.0"
+    "jsdom": "^9.11.0",
+    "node-yaml-config": "0.0.4"
   }
 }
