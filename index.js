@@ -19,7 +19,7 @@ commander.version(pkg.version)
 	.parse(process.argv);
 
 var config = yamlConfig.load(__dirname + '/config.yml');
-var team = commander.team || config.team;
+var team = commander.team || config.team.next_games_url + config.team.id;
 
 jsdom.env({
   url: team,
