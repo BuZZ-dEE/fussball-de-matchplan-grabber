@@ -1,4 +1,5 @@
 default:
   team:
-    next_games_url: 'http://www.fussball.de/ajax.team.next.games/-/team-id/'
     id: '01S7GV1URS000000VS548985VUL18RL3'
+  url:
+    next_games: 'http://www.fussball.de/ajax.team.next.games/-/team-id/'
