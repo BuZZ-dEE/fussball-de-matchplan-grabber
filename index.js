@@ -7,12 +7,9 @@ var pkg = require( path.join(__dirname, 'package.json') );
 var yamlConfig = require('node-yaml-config');
 
 
-/** @type String[] */
-var matchPlanArr = [];
-/** @type Matchplan */
-var matchPlan;
-/** @type String[] */
-var teamVsTeam = [];
+
+
+
 
 commander.version(pkg.version)
 	.option('-t, --team <team>', 'The team url.')
@@ -21,24 +18,42 @@ commander.version(pkg.version)
 var config = yamlConfig.load(__dirname + '/config.yml');
 var team = commander.team || config.url.next_games + config.team.id;
 
-jsdom.env({
-  url: team,
-  scripts: ["http://code.jquery.com/jquery.js"],
-  done: function (err, window) {
-    var $ = window.$;
+/**
+ * Parse the match plan.
+ *
+ * @param {String} team - The next matches team URL.
+ * @returns {Matchplan} The match plan for a team.
+ */
+function parseMatchplan(team) {
+	/** @type {String[]} */
+	var matchPlanArr = [],
+	/** @type {String[]} */
+			teamVsTeam = [],
+	/** @type {Matchplan} */
+			matchPlan;
 
-    $("tr.row-headline").each(function() {
-        matchPlanArr.push(parseMatchTime($(this).text()))
-    });
+	jsdom.env({
+	  url: team,
+	  scripts: ["http://code.jquery.com/jquery.js"],
+	  done: function (err, window) {
+	    var $ = window.$;
 
-    $(".club-name").each(function() {
-        teamVsTeam.push($(this).text());
-    });
+	    $("tr.row-headline").each(function() {
+	        matchPlanArr.push(parseMatchTime($(this).text()))
+	    });
 
-    createMatchplan();
-    outputMatchplan();
-  }
-});
+	    $(".club-name").each(function() {
+	        teamVsTeam.push($(this).text());
+	    });
+
+	    matchPlan = createMatchplan(matchPlanArr, teamVsTeam);
+			matchPlan.output();
+	  }
+	});
+	return matchPlan;
+}
+
+parseMatchplan(team);
 
 /**
  * Parse the match time.
@@ -60,26 +75,28 @@ function parseMatchTime(matchTime) {
 
 /**
  * Create the match plan.
+ *
+ * @param {String[]} matchPlanArr
+ * @param {String[]} teamVsTeam
+ * @returns {Matchplan}
  */
-function createMatchplan() {
+function createMatchplan(matchPlanArr, teamVsTeam) {
     var offset = 0;
-    matchPlan = new Matchplan();
+    var matchPlan = new Matchplan();
     matchPlanArr.forEach(function(currentValue, index, array) {
         matchplanEntry = new MatchplanEntry(currentValue, null, teamVsTeam[offset], teamVsTeam[++offset]);
         matchPlan.addEntry(matchplanEntry);
         offset++;
     });
+		return matchPlan;
 }
 
 /**
- * Console output of the match plan.
+ * A match plan is an array of match plan entries.
+ *
+ * @see {@link MatchplanEntry}
+ * @typedef {Object} Matchplan
  */
-function outputMatchplan() {
-    matchPlan.forEach(function(currentValue, index, array) {
-        console.log(currentValue.toString());
-    });
-}
-
 var Matchplan = (function() {
     /**
      * @constructor
@@ -87,13 +104,28 @@ var Matchplan = (function() {
     function Matchplan() { };
 
     Matchplan.prototype = new Array;
+		/**
+		 * Add match plan entry.
+		 *
+		 * @param {MatchplanEntry} matchplanEntry
+		 */
     Matchplan.prototype.addEntry = Matchplan.prototype.push;
+		/**
+		 * Console output of the match plan.
+		 */
+		Matchplan.prototype.output = function () {
+			this.forEach(function(currentValue, index, array) {
+					console.log(currentValue.toString());
+			});
+		};
 
     return Matchplan;
 })();
 
 /**
- * @typedef {MatchplanEntry}
+ * Holds relevant information of a match plan entry.
+ *
+ * @typedef {Object} MatchplanEntry
  */
 var MatchplanEntry = (function() {
     /**
