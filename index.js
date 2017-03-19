@@ -1,30 +1,14 @@
 #!/usr/bin/env node
 
-var commander = require('commander');
 var jsdom = require('jsdom');
-var path = require('path');
-var pkg = require( path.join(__dirname, 'package.json') );
-var yamlConfig = require('node-yaml-config');
-
-
-
-
-
-
-commander.version(pkg.version)
-	.option('-t, --team <team>', 'The team url.')
-	.parse(process.argv);
-
-var config = yamlConfig.load(__dirname + '/config.yml');
-var team = commander.team || config.url.next_games + config.team.id;
 
 /**
  * Parse the match plan.
  *
  * @param {String} team - The next matches team URL.
- * @returns {Matchplan} The match plan for a team.
+ * @param {function} callback - The function to call back with the match plan.
  */
-function parseMatchplan(team) {
+function parseMatchplan(team, callback) {
 	/** @type {String[]} */
 	var matchPlanArr = [],
 	/** @type {String[]} */
@@ -39,7 +23,7 @@ function parseMatchplan(team) {
 	    var $ = window.$;
 
 	    $("tr.row-headline").each(function() {
-	        matchPlanArr.push(parseMatchTime($(this).text()))
+	        matchPlanArr.push(parseMatchTime($(this).text()));
 	    });
 
 	    $(".club-name").each(function() {
@@ -48,12 +32,10 @@ function parseMatchplan(team) {
 
 	    matchPlan = createMatchplan(matchPlanArr, teamVsTeam);
 			matchPlan.output();
+			callback(matchPlan);
 	  }
 	});
-	return matchPlan;
 }
-
-parseMatchplan(team);
 
 /**
  * Parse the match time.
@@ -96,12 +78,14 @@ function createMatchplan(matchPlanArr, teamVsTeam) {
  *
  * @see {@link MatchplanEntry}
  * @typedef {Object} Matchplan
+ *
+ * @returns {Matchplan}
  */
 var Matchplan = (function() {
     /**
      * @constructor
      */
-    function Matchplan() { };
+    function Matchplan() { }
 
     Matchplan.prototype = new Array;
 		/**
@@ -126,6 +110,7 @@ var Matchplan = (function() {
  * Holds relevant information of a match plan entry.
  *
  * @typedef {Object} MatchplanEntry
+ * @returns {MatchplanEntry}
  */
 var MatchplanEntry = (function() {
     /**
@@ -144,7 +129,7 @@ var MatchplanEntry = (function() {
         this.visitingteam = visitingteam;
         this.description = description;
         this.url = url;
-    };
+    }
 
     MatchplanEntry.prototype.getDate = function() {
         return this.date;
@@ -205,3 +190,5 @@ var MatchplanEntry = (function() {
 
     return MatchplanEntry;
 })();
+
+exports.parseMatchplan = parseMatchplan;

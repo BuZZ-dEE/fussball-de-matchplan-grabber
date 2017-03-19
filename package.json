@@ -1,10 +1,14 @@
 {
   "name": "fussball-de-matchplan-grabber",
-  "version": "0.0.1",
-  "description": "A command-line tool for grabbing the team matchplan from fussball.de",
+  "version": "0.1.4",
+  "description": "A NodeJS module for grabbing the team matchplan from fussball.de",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:BuZZ-dEE/fussball-de-matchplan-grabber.git"
   },
   "keywords": [
     "football",
@@ -12,12 +16,7 @@
   ],
   "author": "Sebastian Schlatow <buzz-dee@riseup.net>",
   "license": "GPL-3.0",
-  "bin": {
-    "fussball-de-matchplan-grabber": "./index.js"
-  },
   "dependencies": {
-    "commander": "^2.9.0",
-    "jsdom": "^9.11.0",
-    "node-yaml-config": "0.0.4"
+    "jsdom": "^9.11.0"
   }
 }
