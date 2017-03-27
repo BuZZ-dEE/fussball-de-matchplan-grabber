@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var jsdom = require('jsdom');
+const URL = require('url').URL;
 
 /**
  * Parse the match plan.
@@ -12,9 +13,12 @@ function parseMatchplan(team, callback) {
 	/** @type {String[]} */
 	var matchPlanArr = [],
 	/** @type {String[]} */
-			teamVsTeam = [],
+		teamVsTeam = [],
 	/** @type {Matchplan} */
-			matchPlan;
+		matchPlan,
+    /** @type {URL[]} */
+        matchDetails = [];
+
 
 	jsdom.env({
 	  url: team,
@@ -30,9 +34,13 @@ function parseMatchplan(team, callback) {
 	        teamVsTeam.push($(this).text());
 	    });
 
-	    matchPlan = createMatchplan(matchPlanArr, teamVsTeam);
-			matchPlan.output();
-			callback(matchPlan);
+        $("td.column-detail a").each(function(index, element) {
+            matchDetails.push(new URL(element.href));
+        });
+
+	    matchPlan = createMatchplan(matchPlanArr, teamVsTeam, matchDetails);
+		matchPlan.output();
+		callback(matchPlan);
 	  }
 	});
 }
@@ -60,13 +68,14 @@ function parseMatchTime(matchTime) {
  *
  * @param {String[]} matchPlanArr
  * @param {String[]} teamVsTeam
+ * @param {URL[]} matchDetails
  * @returns {Matchplan}
  */
-function createMatchplan(matchPlanArr, teamVsTeam) {
+function createMatchplan(matchPlanArr, teamVsTeam, matchDetails) {
     var offset = 0;
     var matchPlan = new Matchplan();
     matchPlanArr.forEach(function(currentValue, index, array) {
-        matchplanEntry = new MatchplanEntry(currentValue, null, teamVsTeam[offset], teamVsTeam[++offset]);
+        matchplanEntry = new MatchplanEntry(currentValue, null, teamVsTeam[offset], teamVsTeam[++offset], null, matchDetails[index]);
         matchPlan.addEntry(matchplanEntry);
         offset++;
     });
@@ -120,7 +129,7 @@ var MatchplanEntry = (function() {
      * @param {String} hometeam - The name of the home team.
      * @param {String} visitingteam - The name of the visiting team.
      * @param {String} description - A match description.
-     * @param {String} url - An URL to match information.
+     * @param {URL} url - An URL to match information.
      */
     function MatchplanEntry(date, location, hometeam, visitingteam, description, url) {
         this.date = date;
@@ -185,7 +194,7 @@ var MatchplanEntry = (function() {
      * e.g. "19.3.2017, 11:00:00: Victoria Osternburg vs GVO Oldenburg IV"
      */
     MatchplanEntry.prototype.toString = function() {
-        return this.date.toLocaleString() + ': ' + this.hometeam + ' vs ' + this.visitingteam;
+        return this.date.toLocaleString() + ': ' + this.hometeam + ' vs ' + this.visitingteam + '\n' + this.url;
     };
 
     return MatchplanEntry;
