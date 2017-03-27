@@ -12,12 +12,12 @@ const URL = require('url').URL;
 function parseMatchplan(team, callback) {
 	/** @type {String[]} */
 	var matchPlanArr = [],
-	/** @type {String[]} */
-		teamVsTeam = [],
 	/** @type {Matchplan} */
-		matchPlan,
-    /** @type {URL[]} */
-        matchDetails = [];
+			matchPlan,
+    /** @type {String[]} */
+            matchDetails = [],
+    /** @type {Encounter[]} */
+            encounters = [];
 
 
 	jsdom.env({
@@ -30,15 +30,19 @@ function parseMatchplan(team, callback) {
 	        matchPlanArr.push(parseMatchTime($(this).text()));
 	    });
 
-	    $(".club-name").each(function() {
-	        teamVsTeam.push($(this).text());
+	    $(".club-name").each(function(index) {
+            if ((index + 1) % 2 === 0) {
+                encounters[encounters.length - 1].setVisitingTeam($(this).text());
+            } else {
+                encounters.push(new Encounter($(this).text()));
+            }
 	    });
 
         $("td.column-detail a").each(function(index, element) {
             matchDetails.push(new URL(element.href));
         });
 
-	    matchPlan = createMatchplan(matchPlanArr, teamVsTeam, matchDetails);
+	    matchPlan = createMatchplan(matchPlanArr, encounters, matchDetails);
 		matchPlan.output();
 		callback(matchPlan);
 	  }
@@ -67,20 +71,64 @@ function parseMatchTime(matchTime) {
  * Create the match plan.
  *
  * @param {String[]} matchPlanArr
- * @param {String[]} teamVsTeam
+ * @param {Encounter[]} encounters
  * @param {URL[]} matchDetails
  * @returns {Matchplan}
  */
-function createMatchplan(matchPlanArr, teamVsTeam, matchDetails) {
-    var offset = 0;
+function createMatchplan(matchPlanArr, encounters, matchDetails) {
     var matchPlan = new Matchplan();
     matchPlanArr.forEach(function(currentValue, index, array) {
-        matchplanEntry = new MatchplanEntry(currentValue, null, teamVsTeam[offset], teamVsTeam[++offset], null, matchDetails[index]);
+        matchplanEntry = new MatchplanEntry(currentValue, null, encounters[index], null, matchDetails[index]);
         matchPlan.addEntry(matchplanEntry);
-        offset++;
     });
-		return matchPlan;
+	return matchPlan;
 }
+
+/**
+ * An encounter of the home team vs the visiting team.
+ * 
+ * @typedef {Object} Encounter
+ *
+ * @returns {Encounter}
+ */
+var Encounter = (function() {
+    /**
+     * @constructor
+     * @param {String} hometeam - The name of the home team.
+     * @param {String} visitingteam - The name of the visiting team.
+     */
+    function Encounter(hometeam , visitingteam) {
+        this.hometeam = hometeam;
+        this.visitingteam = visitingteam;
+    }
+    
+    Encounter.prototype.getHomeTeam = function() {
+        return this.hometeam;
+    };
+
+    Encounter.prototype.setHomeTeam = function(hometeam) {
+        this.hometeam = hometeam;
+    };
+
+    Encounter.prototype.getVisitingTeam = function() {
+        return this.visitingteam;
+    };
+
+    Encounter.prototype.setVisitingTeam = function(visitingteam) {
+        this.visitingteam = visitingteam;
+    };
+
+    /**
+     * Get the encounter in string respresentation.
+     *
+     * e.g. "Victoria Osternburg vs GVO Oldenburg IV"
+     */
+    Encounter.prototype.toString = function() {
+        return this.hometeam + ' vs ' + this.visitingteam;
+    };
+
+    return Encounter;
+})();
 
 /**
  * A match plan is an array of match plan entries.
@@ -97,20 +145,20 @@ var Matchplan = (function() {
     function Matchplan() { }
 
     Matchplan.prototype = new Array;
-		/**
-		 * Add match plan entry.
-		 *
-		 * @param {MatchplanEntry} matchplanEntry
-		 */
+    /**
+     * Add match plan entry.
+     *
+     * @param {MatchplanEntry} matchplanEntry
+     */
     Matchplan.prototype.addEntry = Matchplan.prototype.push;
-		/**
-		 * Console output of the match plan.
-		 */
-		Matchplan.prototype.output = function () {
-			this.forEach(function(currentValue, index, array) {
-					console.log(currentValue.toString());
-			});
-		};
+    /**
+     * Console output of the match plan.
+     */
+    Matchplan.prototype.output = function () {
+        this.forEach(function(currentValue, index, array) {
+                console.log(currentValue.toString());
+        });
+    };
 
     return Matchplan;
 })();
@@ -126,16 +174,14 @@ var MatchplanEntry = (function() {
      * @constructor
      * @param {String} date - The date time of the match.
      * @param {String} location - The location where the game takes place.
-     * @param {String} hometeam - The name of the home team.
-     * @param {String} visitingteam - The name of the visiting team.
+     * @param {Encounter} encounter - The encounter @see {@link Encounter} of the home team vs the visiting team.
      * @param {String} description - A match description.
      * @param {URL} url - An URL to match information.
      */
-    function MatchplanEntry(date, location, hometeam, visitingteam, description, url) {
+    function MatchplanEntry(date, location, encounter, description, url) {
         this.date = date;
         this.location = location;
-        this.hometeam = hometeam;
-        this.visitingteam = visitingteam;
+        this.encounter = encounter;
         this.description = description;
         this.url = url;
     }
@@ -156,20 +202,12 @@ var MatchplanEntry = (function() {
         this.location = location;
     };
 
-    MatchplanEntry.prototype.getHomeTeam = function() {
-        return this.hometeam;
+    MatchplanEntry.prototype.getEncounter = function() {
+        return this.encounter;
     };
 
-    MatchplanEntry.prototype.setHomeTeam = function(hometeam) {
-        this.hometeam = hometeam;
-    };
-
-    MatchplanEntry.prototype.getVisitingTeam = function() {
-        return this.visitingteam;
-    };
-
-    MatchplanEntry.prototype.setVisitingTeam = function(visitingteam) {
-        this.visitingteam = visitingteam;
+    MatchplanEntry.prototype.setEncounter = function(encounter) {
+        this.encounter = encounter;
     };
 
     MatchplanEntry.prototype.getURL = function() {
@@ -194,7 +232,7 @@ var MatchplanEntry = (function() {
      * e.g. "19.3.2017, 11:00:00: Victoria Osternburg vs GVO Oldenburg IV"
      */
     MatchplanEntry.prototype.toString = function() {
-        return this.date.toLocaleString() + ': ' + this.hometeam + ' vs ' + this.visitingteam + '\n' + this.url;
+        return this.date.toLocaleString() + ': ' + this.encounter.toString() + '\n' + this.url;
     };
 
     return MatchplanEntry;
