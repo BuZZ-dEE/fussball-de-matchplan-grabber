@@ -1,6 +1,6 @@
 {
   "name": "fussball-de-matchplan-grabber",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A NodeJS module for grabbing the team matchplan from fussball.de",
   "main": "index.js",
   "scripts": {
