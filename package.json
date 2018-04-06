@@ -4,12 +4,17 @@
   "description": "A NodeJS module for grabbing the team matchplan from fussball.de",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "precommit": "pretty-quick --staged"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:BuZZ-dEE/fussball-de-matchplan-grabber.git"
   },
+  "bugs": {
+    "url": "https://github.com/BuZZ-dEE/fussball-de-matchplan-grabber/issues"
+  },
+  "homepage": "https://github.com/BuZZ-dEE/fussball-de-matchplan-grabber#readme",
   "keywords": [
     "football",
     "fussball"
@@ -18,5 +23,10 @@
   "license": "GPL-3.0",
   "dependencies": {
     "jsdom": "^9.11.0"
+  },
+  "devDependencies": {
+    "husky": "^0.14.3",
+    "prettier": "^1.11.1",
+    "pretty-quick": "^1.4.1"
   }
 }
